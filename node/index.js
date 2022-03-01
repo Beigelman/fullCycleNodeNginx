@@ -12,39 +12,36 @@ const config = {
   password: 'root',
 };
 
-const connection = mysql.createConnection(config);
-
-const createTable  = `CREATE TABLE IF NOT EXISTS people (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL);`
-connection.query(createTable);
-
 app.get('/', async (req, res) => {
+  const connection = mysql.createConnection(config);
+
+  // Creates Table
+  const createTable  = `CREATE TABLE IF NOT EXISTS people (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL);`
+  connection.query(createTable);
+
+  // Inserts Data
   const RANDOM = Math.floor(Math.random() * 10);
   const response = await axios.get('https://swapi.dev/api/people');
   const personName = response.data.results[RANDOM].name;
-
   const insertQuery = `INSERT INTO people(name) values('${personName}')`;
-    
   connection.query(insertQuery);
-  console.log(`${personName} inserido no banco!`);    
 
+  // Get all user
   const getUsersQuery = `SELECT id, name FROM people`;  
-  
   connection.query(getUsersQuery, (error, results, fields) => {
     if (error) {
       throw error
     };
     
-    let table = '<table>';
-    table += '<tr><th>#</th><th>Name</th></tr>';
+    let list = '<ul>';
     for(let people of results) {      
-      table += `<tr><td>${people.id}</td><td>${people.name}</td></tr>`;
+      list += `<li>${people.name}</li>`;
     }
 
-    table += '</table>';    
-    res.send('<h1>Full Cycle Rocks!</h1>' + table);    
+    list += '</ul>';    
+    res.send('<h1>Full Cycle Rocks!</h1>' + list);    
   });   
   connection.end();
-  res.send('<h1>Full Cycle Rocks!</h1>');
 });
 
 app.listen(PORT, () => {
